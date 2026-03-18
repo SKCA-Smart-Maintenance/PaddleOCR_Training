@@ -238,7 +238,8 @@ def check_system() -> None:
     try:
         import paddle
         table.add_row("PaddlePaddle", paddle.__version__)
-        table.add_row("Paddle device", paddle.device.get_available_device())
+        devices = paddle.device.get_available_device()
+        table.add_row("Paddle device", ", ".join(devices) if isinstance(devices, list) else str(devices))
     except ImportError:
         table.add_row("PaddlePaddle", "[dim]not installed[/dim]")
 
