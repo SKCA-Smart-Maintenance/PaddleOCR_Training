@@ -61,10 +61,13 @@ console = Console()
 # ---------------------------------------------------------------------------
 
 def _run(cmd: str, label: str = "") -> None:
-    """Run a shell command, stream output, and raise on failure."""
+    """Run a shell command silently and raise on failure."""
     display = label or cmd
-    console.print(f"  [dim]$ {cmd}[/dim]")
-    result = subprocess.run(cmd, shell=True, text=True)
+    result = subprocess.run(
+        cmd, shell=True, text=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
     if result.returncode != 0:
         raise RuntimeError(f"Command failed (exit {result.returncode}): {display}")
 
@@ -144,8 +147,7 @@ STEPS_CPU: List[dict] = [
 
 def _clone_paddleocr() -> None:
     if os.path.isdir("PaddleOCR"):
-        console.print("  [green]✔[/green] PaddleOCR directory already exists — skipping clone")
-        return
+        return  # already cloned, skip silently
     _run("git clone https://github.com/PaddlePaddle/PaddleOCR.git", "git clone")
 
 
@@ -182,12 +184,9 @@ def setup_paddleocr() -> None:
 
         for i, step in enumerate(steps, 1):
             progress.update(task, description=f"[{i}/{total}] {step['label']}")
-            console.rule(f"[bold dim]Step {i} — {step['label']}", style="dim")
             try:
                 step["fn"]()
-                console.print(f"  [bold green]✔ Done[/bold green]: {step['label']}\n")
             except Exception as exc:
-                console.print(f"  [bold red]✘ Failed[/bold red]: {step['label']}\n  {exc}\n")
                 errors.append(step["label"])
             finally:
                 progress.advance(task)
