@@ -184,12 +184,11 @@ def setup_paddleocr() -> None:
 
         for i, step in enumerate(steps, 1):
             progress.update(task, description=f"[{i}/{total}] {step['label']}")
+            progress.advance(task)          # advance first → always shows correct %
             try:
                 step["fn"]()
             except Exception as exc:
                 errors.append(step["label"])
-            finally:
-                progress.advance(task)
 
     # ── Summary ────────────────────────────────────────────────────────────
     if errors:
@@ -211,6 +210,13 @@ def setup_paddleocr() -> None:
 
 def check_system() -> None:
     """Print a rich summary table of the current environment."""
+    import io, logging, os, warnings
+
+    # Silence paddle / paddlex noise
+    os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
+    warnings.filterwarnings("ignore")
+    logging.disable(logging.CRITICAL)
+
     console.print(Panel.fit("[bold]System Information[/bold]", border_style="blue"))
 
     table = Table(show_header=False, box=None, padding=(0, 2))
